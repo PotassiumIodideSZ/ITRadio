@@ -22,7 +22,7 @@ To run the frontend, navigate to the `ITRadioFrontend` directory and run the dev
 ```bash
 cd ITRadioFrontendVue/ITRadioFrontend
 npm run dev
-
+```
 
 AzuraCast
 AzuraCast is used in this project. For installation and getting started, visit the AzuraCast Documentation.
