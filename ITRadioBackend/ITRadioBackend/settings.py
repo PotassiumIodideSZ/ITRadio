@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'news',
     'rubricks',
     'rest_framework',
+    'api',
     
 ]
 

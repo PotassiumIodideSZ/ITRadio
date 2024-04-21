@@ -1,7 +1,16 @@
 from rest_framework import serializers
-from .models import News
+from .models import NowPlayingSong
 
-class NewsSerializer(serializers.ModelSerializer):
+        
+class NowPlayingSongSerializer(serializers.ModelSerializer):
     class Meta:
-        model = News
-        fields = ['id', 'name', 'description', 'date', 'author']
+        model = NowPlayingSong
+        fields = ['title', 'artist', 'album', 'genre', 'art']
+
+class WebhookSerializer(serializers.Serializer):
+    song = NowPlayingSongSerializer()
+    def create(self, validated_data):
+        print("create")
+        song_data = validated_data.get('song')
+        print(song_data)
+        return NowPlayingSong.objects.create(**song_data)

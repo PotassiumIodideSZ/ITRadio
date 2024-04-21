@@ -16,17 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from api.views import AzuraNowPlayingWebhookView
 
-from news import views
+from news import views as newsViews
 from rest_framework import routers, serializers, viewsets
 
 
 router = routers.DefaultRouter()
-router.register(r'news', views.NewsViewSet)
+router.register(r'news', newsViews.NewsViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
     path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('webhook/', AzuraNowPlayingWebhookView.as_view(), name='webhook-receiver'),
 ]
