@@ -18,7 +18,7 @@
 
 ## ITRadio Frontend
 
-To run the frontend, navigate to the `IT радио` directory and run the development server:
+To run the frontend, navigate to the `ITRadioFrontend` directory and run the development server:
 
 ```bash
 cd ITRadioFrontendVue/ITRadioFrontend
