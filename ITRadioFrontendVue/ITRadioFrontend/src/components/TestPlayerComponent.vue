@@ -1,11 +1,11 @@
 <template>
   <div class="player-container">
-    <div v-if="nowPlaying.song" style="display: flex;">
-        <img :src="nowPlaying.song.art" alt="Album Art" />
-        <div class="info-container">
-          <h2>{{ nowPlaying.song.title }}</h2>
-          <h3>{{ nowPlaying.song.artist }}</h3>
-        </div>
+    <div v-if="nowPlaying.song" style="display: flex">
+      <img :src="nowPlaying.song.art" alt="Album Art" />
+      <div class="info-container">
+        <h2>{{ nowPlaying.song.title }}</h2>
+        <h3>{{ nowPlaying.song.artist }}</h3>
+      </div>
     </div>
   </div>
   <div class="player-container">
@@ -35,7 +35,7 @@ export default {
     const nowPlaying = reactive({ song: null });
 
     const sound = new Howl({
-      src: ["http://localhost:8000/radio.mp3"],
+      src: ["http://localhost:5173/radio.mp3"],
       html5: true,
     });
 
@@ -84,6 +84,39 @@ export default {
     const updateSlider = () => {
       state.slider = sound2.seek() || 0;
       animationId = requestAnimationFrame(updateSlider);
+    };
+
+    const sseBaseUri = "https://localhost/api/live/station/1/nowplaying/sse";
+    const sseUriParams = new URLSearchParams({
+      cf_connect: JSON.stringify({
+        subs: {
+          "station:itr": {},
+        },
+      }),
+    });
+    const sseUri = sseBaseUri + "?" + sseUriParams.toString();
+    const sse = new EventSource(sseUri);
+
+    let nowplaying = {};
+    let currentTime = 0;
+
+    // This is a now-playing event from a station. Update your now-playing data accordingly.
+    function handleData(payload) {
+      const jsonData = payload?.pub?.data ?? {};
+      currentTime = jsonData.current_time;
+      nowplaying = jsonData.np;
+    }
+
+    sse.onmessage = (e) => {
+      const jsonData = JSON.parse(e.data);
+      if ("connect" in jsonData) {
+        // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
+        const initialData = jsonData.connect.data ?? [];
+        initialData.forEach((initialRow) => handleData(initialRow));
+        console.log(initialData);
+      } else if ("channel" in jsonData) {
+        handleData(jsonData);
+      }
     };
 
     onMounted(() => {
@@ -174,7 +207,7 @@ input[type="range"] {
   background: #d3d3d3;
   outline: none;
   opacity: 0.7;
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 }
 
 input[type="range"]:hover {
@@ -187,7 +220,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #4caf50;
   cursor: pointer;
 }
 
@@ -195,7 +228,7 @@ input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #4caf50;
   cursor: pointer;
 }
 </style>
