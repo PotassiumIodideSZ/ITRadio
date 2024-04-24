@@ -9,8 +9,10 @@ from django.contrib.auth.models import User
 class LoginAPIView(APIView):
     queryset = User.objects.all()
     def post(self, request):
+        print("suc")
         username = request.data.get('username')
         password = request.data.get('password')
+        print("suc", username, password)
         user = authenticate(username=username, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)

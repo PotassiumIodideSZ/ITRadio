@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <div class="login-container">
@@ -12,11 +11,13 @@
 <script>
 import { ref } from 'vue';
 import axios from 'axios';
+import { useUserStore } from '../stores/userCred'; // Import the useUserStore function
 
 export default {
   setup() {
     const username = ref('');
     const password = ref('');
+    const userStore = useUserStore(); // Create an instance of the user store
 
     const login = async () => {
       if (username.value === '' || password.value === '') {
@@ -30,6 +31,8 @@ export default {
           password: password.value,
         });
         document.cookie = `token=${response.data.token}; path=/; httpOnly`;
+        userStore.setUser(response.data.user); // Set the user state in the store
+        console.log("Logged In: ", response.data);
         // Redirect or perform other actions after successful login
       } catch (error) {
         centralizedErrorHandler(error);
