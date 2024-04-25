@@ -10,6 +10,7 @@ markdown = "*"
 django-filter = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

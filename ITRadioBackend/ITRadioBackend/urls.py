@@ -26,10 +26,12 @@ from rest_framework_simplejwt.views import (
 
 from news import views as newsViews
 from rest_framework import routers, serializers, viewsets
+from userProfile.views import ProfileViewSet, AddSong
 
 
 router = routers.DefaultRouter()
 router.register(r'news', newsViews.NewsViewSet)
+router.register(r'profiles', ProfileViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,6 +42,7 @@ urlpatterns = [
     
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('add-song/', AddSong, name='add-song'),
     
     # path('webhook/', AzuraNowPlayingWebhookView.as_view(), name='webhook-receiver'),
     path('api/login/', LoginAPIView.as_view(), name='login'),

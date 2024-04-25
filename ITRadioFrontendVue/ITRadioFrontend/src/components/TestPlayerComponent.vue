@@ -6,6 +6,13 @@
         <h2>{{ nowPlaying.song.title }}</h2>
         <h3>{{ nowPlaying.song.artist }}</h3>
       </div>
+      <button
+        v-if="state.isTokenValid"
+        :class="{ 'float-right-button': true, liked: state.isLiked }"
+        @click="songLiked"
+      >
+        Like
+      </button>
     </div>
   </div>
   <div class="player-container">
@@ -24,18 +31,56 @@
 import { onMounted, onUnmounted, reactive, watch } from "vue";
 import axios from "axios";
 import { Howl } from "howler";
+import { useUserStore } from "../stores/userCred";
+
 export default {
   name: "TestComponent",
   setup() {
     const state = reactive({
       volume: 0.5,
       slider: 0,
+      isTokenValid: false,
+      isLiked: false,
     });
 
+    const store = useUserStore();
     const nowPlaying = reactive({ song: null });
 
+    const verifyUserToken = async () => {
+      if (store.isLoggedIn()) {
+        const isTokenValid = await store.verifyToken();
+        state.isTokenValid = isTokenValid;
+        if (isTokenValid) {
+          console.log("Token is valid.");
+        } else {
+          console.log("Token is invalid.");
+        }
+      } else {
+        console.log("User is not logged in.");
+        state.isTokenValid = false;
+      }
+    };
+    const songLiked = async () => {
+      const addSong = axios.create({
+        baseURL: "http://127.0.0.1:8000/",
+      });
+      addSong
+        .post("add-song/", {
+          token: localStorage.getItem("token"),
+          new_song: nowPlaying.song,
+        })
+        .then((response) => {
+          console.log("liked");
+          state.isLiked = !state.isLiked;
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    };
+
+    //Howler
     const sound = new Howl({
-      src: ["http://localhost:5173/radio.mp3"],
+      src: ["http://localhost:8000/radio.mp3"],
       html5: true,
     });
 
@@ -122,6 +167,8 @@ export default {
     onMounted(() => {
       fetchNowPlaying();
       animationId = requestAnimationFrame(updateSlider);
+
+      verifyUserToken();
     });
 
     onUnmounted(() => {
@@ -140,6 +187,7 @@ export default {
       pause2,
       changePosition,
       nowPlaying,
+      songLiked,
     };
   },
 };
@@ -230,5 +278,22 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 50%;
   background: #4caf50;
   cursor: pointer;
+}
+.float-right-button {
+  margin-left: auto;
+  background-color: #007bff; /* Blue background */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.float-right-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+.liked {
+  background-color: #d11e69; /* Green background for liked state */
 }
 </style>

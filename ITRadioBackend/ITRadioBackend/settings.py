@@ -41,10 +41,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework.authtoken',
     
     'news',
     'rubricks',
     'loginApi',
+    'userProfile',
     
 ]
 
@@ -139,9 +141,17 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
     )
 }
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',  # Adjust the port if your Vue app is served on a different one
     'http://127.0.0.1:5173',
 ]
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+  }
