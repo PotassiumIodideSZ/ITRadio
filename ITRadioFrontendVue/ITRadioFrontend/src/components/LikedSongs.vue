@@ -7,12 +7,12 @@
         <h3>{{ song.artist }}</h3>
       </div>
       <button
-        v-if="state.isTokenValid"
-        :class="{ 'float-right-button': true, liked: state.isLiked }"
-        @click="toggleLike(song)"
-      >
-        Like
-      </button>
+  v-if="state.isTokenValid"
+  :class="{ 'float-right-button': true, liked: state.likedSongs.some((s) => s.id === song.id) }"
+  @click="toggleLike(song)"
+>
+  Like
+</button>
     </div>
   </div>
 </template>
@@ -39,6 +39,10 @@ export default {
             Authorization: `Bearer ${token}`,
           },
         });
+        response.data.map((song) => ({
+          ...song,
+          isLiked: true, // Initialize or set based on response
+        }));
         state.likedSongs = response.data;
         console.log(state.likedSongs);
       } catch (error) {
@@ -213,5 +217,8 @@ input[type="range"]::-moz-range-thumb {
 }
 .liked {
   background-color: #d11e69; /* Green background for liked state */
+}
+.liked:hover {
+  background-color: #8f1344; /* Slightly darker shade of the original liked background color */
 }
 </style>
