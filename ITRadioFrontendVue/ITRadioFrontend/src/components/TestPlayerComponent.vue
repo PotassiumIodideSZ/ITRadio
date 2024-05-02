@@ -41,6 +41,7 @@ export default {
       slider: 0,
       isTokenValid: false,
       isLiked: false,
+      likedSongs: {},
     });
 
     const store = useUserStore();
@@ -48,36 +49,75 @@ export default {
 
     const verifyUserToken = async () => {
       if (store.isLoggedIn()) {
-        const isTokenValid = await store.verifyToken();
-        state.isTokenValid = isTokenValid;
-        if (isTokenValid) {
-          console.log("Token is valid.");
-        } else {
-          console.log("Token is invalid.");
-        }
+        state.isTokenValid = true;
+        const fetchLikedSongs = async () => {
+          try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get("http://127.0.0.1:8000/liked-songs/", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            state.likedSongs = response.data;
+            console.log(state.likedSongs);
+          } catch (error) {
+            console.error("Error fetching liked songs:", error);
+          }
+        };
+        await fetchLikedSongs();
+        isLiked();
       } else {
         console.log("User is not logged in.");
         state.isTokenValid = false;
       }
     };
     const songLiked = async () => {
-      const addSong = axios.create({
+      const token = localStorage.getItem("token");
+      const axiosInstance = axios.create({
         baseURL: "http://127.0.0.1:8000/",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      addSong
-        .post("add-song/", {
-          token: localStorage.getItem("token"),
-          new_song: nowPlaying.song,
-        })
-        .then((response) => {
-          console.log("liked");
-          state.isLiked = !state.isLiked;
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    };
 
+      if (state.isLiked) {
+        // If the song is already liked, send a request to delete it
+        axiosInstance
+          .post("delete-song/", {
+            id: nowPlaying.song.id,
+          })
+          .then((response) => {
+            console.log("Song unliked");
+            state.isLiked = false;
+            // Optionally, update the likedSongs state
+            delete state.likedSongs[nowPlaying.song.id];
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      } else {
+        // If the song is not liked, send a request to add it
+        axiosInstance
+          .post("add-song/", {
+            new_song: nowPlaying.song,
+          })
+          .then((response) => {
+            console.log("Song liked");
+            state.isLiked = true;
+            // Optionally, update the likedSongs state
+            state.likedSongs[nowPlaying.song.id] = nowPlaying.song;
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    };
+    function isLiked() {
+      // Check if the song is in the likedSongs list
+      state.isLiked = Object.values(state.likedSongs).some(
+        (song) => song.id === nowPlaying.song.id
+      );
+    }
     //Howler
     const sound = new Howl({
       src: ["http://localhost:8000/radio.mp3"],
@@ -96,6 +136,7 @@ export default {
       try {
         const response = await axios.get("http://localhost/api/nowplaying/1");
         nowPlaying.song = response.data.now_playing.song;
+        isLiked();
       } catch (error) {
         console.error("Failed to fetch now playing data:", error);
         nowPlaying.song = null;
@@ -131,38 +172,35 @@ export default {
       animationId = requestAnimationFrame(updateSlider);
     };
 
-    const sseBaseUri = "https://localhost/api/live/station/1/nowplaying/sse";
-    const sseUriParams = new URLSearchParams({
-      cf_connect: JSON.stringify({
-        subs: {
-          "station:itr": {},
-        },
-      }),
-    });
-    const sseUri = sseBaseUri + "?" + sseUriParams.toString();
-    const sse = new EventSource(sseUri);
+    // const sseBaseUri = "https://localhost/api/live/station/1/nowplaying/sse";
+    // const sseUriParams = new URLSearchParams({
+    //   cf_connect: JSON.stringify({
+    //     subs: {
+    //       "station:itr": {},
+    //     },
+    //   }),
+    // });
+    // const sseUri = sseBaseUri + "?" + sseUriParams.toString();
+    //const sse = new EventSource(sseUri);
 
-    let nowplaying = {};
-    let currentTime = 0;
+    // // This is a now-playing event from a station. Update your now-playing data accordingly.
+    // function handleData(payload) {
+    //   const jsonData = payload?.pub?.data ?? {};
+    //   currentTime = jsonData.current_time;
+    //   nowplaying = jsonData.np;
+    // }
 
-    // This is a now-playing event from a station. Update your now-playing data accordingly.
-    function handleData(payload) {
-      const jsonData = payload?.pub?.data ?? {};
-      currentTime = jsonData.current_time;
-      nowplaying = jsonData.np;
-    }
-
-    sse.onmessage = (e) => {
-      const jsonData = JSON.parse(e.data);
-      if ("connect" in jsonData) {
-        // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
-        const initialData = jsonData.connect.data ?? [];
-        initialData.forEach((initialRow) => handleData(initialRow));
-        console.log(initialData);
-      } else if ("channel" in jsonData) {
-        handleData(jsonData);
-      }
-    };
+    // sse.onmessage = (e) => {
+    //   const jsonData = JSON.parse(e.data);
+    //   if ("connect" in jsonData) {
+    //     // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
+    //     const initialData = jsonData.connect.data ?? [];
+    //     initialData.forEach((initialRow) => handleData(initialRow));
+    //     console.log(initialData);
+    //   } else if ("channel" in jsonData) {
+    //     handleData(jsonData);
+    //   }
+    // };
 
     onMounted(() => {
       fetchNowPlaying();
@@ -295,5 +333,8 @@ input[type="range"]::-moz-range-thumb {
 }
 .liked {
   background-color: #d11e69; /* Green background for liked state */
+}
+.liked:hover {
+  background-color: #8f1344; /* Slightly darker shade of the original liked background color */
 }
 </style>

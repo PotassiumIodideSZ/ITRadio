@@ -26,7 +26,7 @@ from rest_framework_simplejwt.views import (
 
 from news import views as newsViews
 from rest_framework import routers, serializers, viewsets
-from userProfile.views import ProfileViewSet, AddSong
+from userProfile.views import ProfileViewSet, AddSong, DeleteSong, GetLikedSongs
 
 
 router = routers.DefaultRouter()
@@ -43,6 +43,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('add-song/', AddSong, name='add-song'),
+    path('delete-song/', DeleteSong, name='delete-songs'),
+    path('liked-songs/', GetLikedSongs, name='liked-songs'),
     
     # path('webhook/', AzuraNowPlayingWebhookView.as_view(), name='webhook-receiver'),
     path('api/login/', LoginAPIView.as_view(), name='login'),

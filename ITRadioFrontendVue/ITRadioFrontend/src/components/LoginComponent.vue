@@ -39,6 +39,10 @@ export default {
         baseURL: "http://127.0.0.1:8000/api/",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //         const api = axios.create({
+  // baseURL: "http://127.0.0.1:8000/api/",
+  // withCredentials: true,
+  //add spinner
         },
       });
       api
