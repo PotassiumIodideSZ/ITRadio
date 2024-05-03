@@ -17,3 +17,6 @@ class ProfileSerializer(serializers.ModelSerializer):
                 instance.likedSongs = current_songs
             instance.save()
         return instance
+    def create(self, validated_data):
+        validated_data['likedSongs'] = []
+        return Profile.objects.create(**validated_data)

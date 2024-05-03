@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 # from api.views import AzuraNowPlayingWebhookView
-from loginApi.views import LoginAPIView
+from loginApi.views import login, register
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -47,5 +47,6 @@ urlpatterns = [
     path('liked-songs/', GetLikedSongs, name='liked-songs'),
     
     # path('webhook/', AzuraNowPlayingWebhookView.as_view(), name='webhook-receiver'),
-    path('api/login/', LoginAPIView.as_view(), name='login'),
+    path('api/login/', login, name='login'),
+    path('api/register/', register, name='register'),
 ]

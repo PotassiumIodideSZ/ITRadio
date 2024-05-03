@@ -1,18 +1,18 @@
 <template>
   <div v-for="song in state.likedSongs" :key="song.id" class="player-container">
-    <div v-if="song" style="display: flex">
+    <div v-if="song" class="player-container">
       <img :src="song.art" alt="Album Art" />
       <div class="info-container">
         <h2>{{ song.title }}</h2>
         <h3>{{ song.artist }}</h3>
       </div>
       <button
-  v-if="state.isTokenValid"
-  :class="{ 'float-right-button': true, liked: state.likedSongs.some((s) => s.id === song.id) }"
-  @click="toggleLike(song)"
->
-  Like
-</button>
+        v-if="state.isTokenValid"
+        :class="['float-right-button', { 'liked': song.isLiked }]"
+        @click="toggleLike(song)"
+      >
+        Like
+      </button>
     </div>
   </div>
 </template>
@@ -27,7 +27,6 @@ export default {
     const state = reactive({
       likedSongs: [],
       isTokenValid: true, // This should be dynamically checked
-      isLiked: false, // This should be dynamically set based on whether the song is liked
       volume: 0.5,
     });
 
@@ -39,12 +38,10 @@ export default {
             Authorization: `Bearer ${token}`,
           },
         });
-        response.data.map((song) => ({
+        state.likedSongs = response.data.map((song) => ({
           ...song,
           isLiked: true, // Initialize or set based on response
         }));
-        state.likedSongs = response.data;
-        console.log(state.likedSongs);
       } catch (error) {
         console.error("Error fetching liked songs:", error);
       }
@@ -62,7 +59,7 @@ export default {
       });
 
       // Check if the song is currently liked
-      const isSongLiked = state.likedSongs.some((s) => s.id === song.id);
+      const isSongLiked = song.isLiked;
 
       if (isSongLiked) {
         // If the song is liked, send a request to delete it
@@ -71,7 +68,6 @@ export default {
             id: song.id,
           })
           .then((response) => {
-            console.log("Song unliked");
             // Update the likedSongs state by filtering out the unliked song
             state.likedSongs = state.likedSongs.filter((s) => s.id !== song.id);
           })
@@ -85,7 +81,6 @@ export default {
             new_song: song,
           })
           .then((response) => {
-            console.log("Song liked");
             // Update the likedSongs state by adding the new liked song
             state.likedSongs.push(song);
           })
@@ -218,6 +213,7 @@ input[type="range"]::-moz-range-thumb {
 .liked {
   background-color: #d11e69; /* Green background for liked state */
 }
+
 .liked:hover {
   background-color: #8f1344; /* Slightly darker shade of the original liked background color */
 }

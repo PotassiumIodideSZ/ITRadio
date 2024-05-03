@@ -69,3 +69,5 @@ def GetLikedSongs(request):
         profile = get_object_or_404(Profile, user=user)
         serializer = ProfileSerializer(profile)
         return Response(serializer.data['likedSongs'], status=status.HTTP_200_OK)
+    
+    

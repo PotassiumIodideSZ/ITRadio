@@ -1,4 +1,7 @@
 <script setup>
+import { useUserStore } from "../stores/userCred";
+const userStore = useUserStore(); 
+const userName = localStorage.getItem('user');
 defineProps({
   msg: {
     type: String,
@@ -13,6 +16,9 @@ defineProps({
     <h3>
       Фронт ITR.
     </h3>
+    <p v-if="userStore.isLoggedIn()">
+      Logged in: {{ userName }}
+    </p>
   </div>
 </template>
 

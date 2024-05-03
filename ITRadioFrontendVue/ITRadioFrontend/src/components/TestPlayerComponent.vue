@@ -1,6 +1,6 @@
 <template>
   <div class="player-container">
-    <div v-if="nowPlaying.song" style="display: flex">
+    <div v-if="nowPlaying.song" class="player-container">
       <img :src="nowPlaying.song.art" alt="Album Art" />
       <div class="info-container">
         <h2>{{ nowPlaying.song.title }}</h2>
@@ -172,35 +172,35 @@ export default {
       animationId = requestAnimationFrame(updateSlider);
     };
 
-    // const sseBaseUri = "https://localhost/api/live/station/1/nowplaying/sse";
-    // const sseUriParams = new URLSearchParams({
-    //   cf_connect: JSON.stringify({
-    //     subs: {
-    //       "station:itr": {},
-    //     },
-    //   }),
-    // });
-    // const sseUri = sseBaseUri + "?" + sseUriParams.toString();
-    //const sse = new EventSource(sseUri);
+    const sseBaseUri = "https://localhost/api/live/station/1/nowplaying/sse";
+    const sseUriParams = new URLSearchParams({
+      cf_connect: JSON.stringify({
+        subs: {
+          "station:itr": {},
+        },
+      }),
+    });
+    const sseUri = sseBaseUri + "?" + sseUriParams.toString();
+    const sse = new EventSource(sseUri);
 
-    // // This is a now-playing event from a station. Update your now-playing data accordingly.
-    // function handleData(payload) {
-    //   const jsonData = payload?.pub?.data ?? {};
-    //   currentTime = jsonData.current_time;
-    //   nowplaying = jsonData.np;
-    // }
+    // This is a now-playing event from a station. Update your now-playing data accordingly.
+    function handleData(payload) {
+      const jsonData = payload?.pub?.data ?? {};
+      currentTime = jsonData.current_time;
+      nowplaying = jsonData.np;
+    }
 
-    // sse.onmessage = (e) => {
-    //   const jsonData = JSON.parse(e.data);
-    //   if ("connect" in jsonData) {
-    //     // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
-    //     const initialData = jsonData.connect.data ?? [];
-    //     initialData.forEach((initialRow) => handleData(initialRow));
-    //     console.log(initialData);
-    //   } else if ("channel" in jsonData) {
-    //     handleData(jsonData);
-    //   }
-    // };
+    sse.onmessage = (e) => {
+      const jsonData = JSON.parse(e.data);
+      if ("connect" in jsonData) {
+        // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
+        const initialData = jsonData.connect.data ?? [];
+        initialData.forEach((initialRow) => handleData(initialRow));
+        console.log(initialData);
+      } else if ("channel" in jsonData) {
+        handleData(jsonData);
+      }
+    };
 
     onMounted(() => {
       fetchNowPlaying();
@@ -226,6 +226,7 @@ export default {
       changePosition,
       nowPlaying,
       songLiked,
+      sse,
     };
   },
 };
