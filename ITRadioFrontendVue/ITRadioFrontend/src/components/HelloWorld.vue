@@ -1,5 +1,8 @@
 <script setup>
 import { useUserStore } from "../stores/userCred";
+
+import PlayerComponent from "@/components/PlayerComponent.vue";
+
 const userStore = useUserStore(); 
 const userName = localStorage.getItem('user');
 defineProps({
@@ -19,6 +22,9 @@ defineProps({
     <p v-if="userStore.isLoggedIn()">
       Logged in: {{ userName }}
     </p>
+  </div>
+  <div>
+    <PlayerComponent />
   </div>
 </template>
 

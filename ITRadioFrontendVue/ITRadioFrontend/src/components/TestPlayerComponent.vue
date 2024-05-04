@@ -48,7 +48,7 @@ export default {
     const nowPlaying = reactive({ song: null });
 
     const verifyUserToken = async () => {
-      if (store.isLoggedIn()) {
+      if (store.verifyToken()) {
         state.isTokenValid = true;
         const fetchLikedSongs = async () => {
           try {
@@ -59,7 +59,6 @@ export default {
               },
             });
             state.likedSongs = response.data;
-            console.log(state.likedSongs);
           } catch (error) {
             console.error("Error fetching liked songs:", error);
           }
@@ -67,7 +66,6 @@ export default {
         await fetchLikedSongs();
         isLiked();
       } else {
-        console.log("User is not logged in.");
         state.isTokenValid = false;
       }
     };
@@ -87,24 +85,19 @@ export default {
             id: nowPlaying.song.id,
           })
           .then((response) => {
-            console.log("Song unliked");
             state.isLiked = false;
-            // Optionally, update the likedSongs state
             delete state.likedSongs[nowPlaying.song.id];
           })
           .catch((error) => {
             console.error("Error:", error);
           });
       } else {
-        // If the song is not liked, send a request to add it
         axiosInstance
           .post("add-song/", {
             new_song: nowPlaying.song,
           })
           .then((response) => {
-            console.log("Song liked");
             state.isLiked = true;
-            // Optionally, update the likedSongs state
             state.likedSongs[nowPlaying.song.id] = nowPlaying.song;
           })
           .catch((error) => {
@@ -125,7 +118,7 @@ export default {
     });
 
     const sound2 = new Howl({
-      src: ["https://cdn.freesound.org/previews/732/732054_1648170-lq.mp3"],
+      src: ["http://localhost/api/station/1/file/8e68726a6b45fddd6397eae0/play"],
       format: ["mp3"],
       onload: function () {
         state.slider = sound2.duration();
@@ -196,7 +189,6 @@ export default {
         // Initial data is sent in the "connect" response as an array of rows similar to individual messages.
         const initialData = jsonData.connect.data ?? [];
         initialData.forEach((initialRow) => handleData(initialRow));
-        console.log(initialData);
       } else if ("channel" in jsonData) {
         handleData(jsonData);
       }
