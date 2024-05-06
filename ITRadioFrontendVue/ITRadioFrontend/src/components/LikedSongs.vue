@@ -1,5 +1,11 @@
 <template>
-  <div v-for="song in state.likedSongs" :key="song.id" class="player-container">
+  <div
+    v-for="song in playerStore.likedSongsList"
+    :key="song.id"
+    class="player-container"
+    @click="setSongDetails(song)"
+    :class="{ 'selected-song': state.currentSong && song.id === state.currentSong.id }"
+  >
     <div v-if="song" class="player-container">
       <img :src="song.art" alt="Album Art" />
       <div class="info-container">
@@ -8,8 +14,8 @@
       </div>
       <button
         v-if="state.isTokenValid"
-        :class="['float-right-button', { 'liked': song.isLiked }]"
-        @click="toggleLike(song)"
+        :class="['float-right-button', 'liked']"
+        @click.stop="LikeSongWrapper(song)"
       >
         Like
       </button>
@@ -20,14 +26,18 @@
 <script>
 import axios from "axios";
 import { reactive, onMounted } from "vue";
+import { usePlayerStore } from "../stores/playerStore";
+import { LikeSong } from "../util/likeSong";
 
 export default {
   name: "LikedSongs",
   setup() {
+    const playerStore = usePlayerStore();
     const state = reactive({
       likedSongs: [],
       isTokenValid: true, // This should be dynamically checked
       volume: 0.5,
+      currentSong: null,
     });
 
     const fetchLikedSongs = async () => {
@@ -42,53 +52,30 @@ export default {
           ...song,
           isLiked: true, // Initialize or set based on response
         }));
+        playerStore.likedSongsList = state.likedSongs;
       } catch (error) {
         console.error("Error fetching liked songs:", error);
       }
     };
 
-    onMounted(fetchLikedSongs);
+    onMounted(() => {
+      playerStore
+        .getLikedSongs()
+        .then((likedSongsList) => {
+          playerStore.likedSongsList = likedSongsList;
+        })
+        .catch((error) => {
+          console.error("Failed to get liked songs:", error);
+        });
+    });
 
-    const toggleLike = async (song) => {
-      const token = localStorage.getItem("token");
-      const axiosInstance = axios.create({
-        baseURL: "http://127.0.0.1:8000/",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Check if the song is currently liked
-      const isSongLiked = song.isLiked;
-
-      if (isSongLiked) {
-        // If the song is liked, send a request to delete it
-        axiosInstance
-          .post("delete-song/", {
-            id: song.id,
-          })
-          .then((response) => {
-            // Update the likedSongs state by filtering out the unliked song
-            state.likedSongs = state.likedSongs.filter((s) => s.id !== song.id);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      } else {
-        // If the song is not liked, send a request to add it
-        axiosInstance
-          .post("add-song/", {
-            new_song: song,
-          })
-          .then((response) => {
-            // Update the likedSongs state by adding the new liked song
-            state.likedSongs.push(song);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      }
-    };
+    function LikeSongWrapper(song) {
+      LikeSong(song, true);
+    }
+    function setSongDetails(song) {
+      playerStore.changeSong(song);
+      state.currentSong = song;
+    }
 
     const play = (song) => {
       // Implement play functionality
@@ -99,10 +86,11 @@ export default {
       // Implement pause functionality
       console.log("Pause:", song);
     };
-
     return {
       state,
-      toggleLike,
+      playerStore,
+      LikeSongWrapper,
+      setSongDetails,
       play,
       pause,
     };
@@ -216,5 +204,8 @@ input[type="range"]::-moz-range-thumb {
 
 .liked:hover {
   background-color: #8f1344; /* Slightly darker shade of the original liked background color */
+}
+.selected-song {
+  border: 2px solid #007bff; /* Blue border */
 }
 </style>

@@ -47,7 +47,6 @@ export const useUserStore = defineStore({
         if (!token) throw new Error('No token found')
   
         const response = await api.post('token/verify/', { token })
-        console.log('Token verified successfully:', response.data)
         return true;
       } catch (error) {
         if (localStorage.getItem('refreshToken')){

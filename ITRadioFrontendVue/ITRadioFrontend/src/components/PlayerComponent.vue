@@ -9,10 +9,16 @@
             <h2>{{ playerStore.title }}</h2>
             <h3>{{ playerStore.author }}</h3>
           </div>
+          <button class="radio-control-button" @click="playerStore.togglePlay()">
+            {{ playerStore.isPlaying ? "Pause" : "Play" }}
+          </button>
+          <button class="radio-control-button" @click="playerStore.toggleMode()">
+            {{ this.playerStore.isRadioMode ? "To Music" : "To Radio" }}
+          </button>
           <button
             v-if="state.isTokenValid"
-            :class="{ 'float-right-button': true, liked: playerStore.isLiked }"
-            @click="songLiked"
+            :class="{ 'float-right-button': true, liked: this.playerStore.isSongLiked }"
+            @click="LikeSongWrapper(playerStore.nowPlayingSong)"
           >
             Like
           </button>
@@ -26,6 +32,9 @@
 import { onMounted, onUnmounted, reactive, watch } from "vue";
 import { usePlayerStore } from "../stores/playerStore";
 import { useUserStore } from "../stores/userCred";
+import { LikeSong } from "../util/likeSong";
+import { Howl } from "howler";
+import axios from "axios";
 
 export default {
   name: "BottomPlayer",
@@ -33,13 +42,11 @@ export default {
     const playerStore = usePlayerStore();
     const userStore = useUserStore();
     userStore.verifyToken();
-    // Access store state directly
     const state = reactive({
-      volume: 0.5,
-      currentDuration: 0,
       isTokenValid: false,
-      isLiked: false,
     });
+    
+    
     return {
       playerStore,
       userStore,
@@ -53,7 +60,6 @@ export default {
     };
   },
   mounted() {
-    this.playerStore.getNowPlaying();
     this.userStore
       .verifyToken()
       .then((isValid) => {
@@ -62,12 +68,18 @@ export default {
       .catch((error) => {
         console.error("Failed to verify token:", error);
       });
-  },
-  computed: {
-    // Example of a computed property that depends on the store's state
-    isLiked() {
-      return this.playerStore.isSongLiked;
-    },
+
+    this.playerStore
+      .getLikedSongs()
+      .then((likedSongsList) => {
+        this.playerStore.likedSongsList = likedSongsList;
+      })
+      .catch((error) => {
+        console.error("Failed to get liked songs:", error);
+      })
+      .finally(() => {
+        this.playerStore.getNowPlaying();
+      });
   },
   methods: {
     togglePlayer() {
@@ -78,6 +90,9 @@ export default {
         this.playerBottom = "0px";
         this.arrowDirection = "▼"; // Arrow points down when player is visible
       }
+    },
+    LikeSongWrapper(song) {
+      LikeSong(song, this.playerStore.isSongLiked);
     },
   },
 };
@@ -117,8 +132,8 @@ export default {
 }
 
 img {
-  width: 40px; /* Adjust image size */
-  height: 40px; /* Adjust image height */
+  width: 50px; /* Adjust image size */
+  height: 50px; /* Adjust image height */
   margin-right: 10px; /* Space between image and info */
 }
 .toggle-arrow {
@@ -144,5 +159,40 @@ img {
 
 .controls button:hover {
   background-color: #45a049;
+}
+.radio-control-button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.radio-control-button:hover {
+  background-color: #45a049;
+}
+.float-right-button {
+  margin-left: auto;
+  background-color: #007bff; /* Blue background */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.float-right-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+.liked {
+  background-color: #d11e69; /* Green background for liked state */
+}
+
+.liked:hover {
+  background-color: #8f1344; /* Slightly darker shade of the original liked background color */
 }
 </style>
